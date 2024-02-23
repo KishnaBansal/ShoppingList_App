@@ -62,11 +62,11 @@ class _GroceryListState extends State<GroceryList> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Icon(
-                          Icons.delete_forever_rounded,
+                          Icons.delete_sweep_rounded,
                           color: Colors.white,
                         ),
                         Icon(
-                          Icons.delete_forever_rounded,
+                          Icons.delete_sweep_rounded,
                           color: Colors.white,
                         ),
                       ],
