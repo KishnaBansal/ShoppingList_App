@@ -15,37 +15,52 @@ class NewItem extends StatefulWidget {
 
 class _NewItem extends State<NewItem> {
   final _formKey = GlobalKey<FormState>();
-  var _enteredValue = '';
+  var _enteredName = '';
   var _enteredQuantity = 1;
   var _selectedCategory = categories[Categories.spices]!;
+  var _isSending = false;
 
-  void _saveItem() {
+  void _saveItem() async {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
-      final url = Uri.https('flutter-prep-db4c8-default-rtdb.firebaseio.com',
+      setState(() {
+        _isSending = true;
+      });
+      final url = Uri.https(
+          'flutter-shopping-56656-default-rtdb.firebaseio.com',
           'shopping-list.json');
-      http.post(
+      final response = await http.post(
         url,
         headers: {
           'Content-Type': 'application/json',
         },
         body: json.encode(
           {
-            'name': _enteredValue,
+            'name': _enteredName,
             'quantity': _enteredQuantity,
             'category': _selectedCategory.title,
           },
         ),
       );
 
-      Navigator.of(context).pop(
-        GroceryItem(
-          id: DateTime.now().toString(),
-          name: _enteredValue,
+      final Map<String, dynamic> resData = json.decode(response.body);
+
+      print(response.body);
+      print(response.statusCode);
+
+      if (!context.mounted)
+        return; //This line checks if the current widget is still in the widget tree (i.e., it’s “mounted”).
+
+      Navigator.of(context).pop(GroceryItem(
+          id: resData['name'],
+          name: _enteredName,
           quantity: _enteredQuantity,
-          category: _selectedCategory,
-        ),
-      );
+          category: _selectedCategory));
+
+      //response.statusCode == 404 can be used to check if everything worked or not
+
+//To get data back we have to wait first for http post request to complete its work by using a method like :-
+      //.then((response) {});    //Second method is done above
     }
   }
 
@@ -77,7 +92,7 @@ class _NewItem extends State<NewItem> {
                   return null;
                 },
                 onSaved: (value) {
-                  _enteredValue = value!;
+                  _enteredName = value!;
                 },
               ),
               Row(
@@ -141,14 +156,14 @@ class _NewItem extends State<NewItem> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   TextButton(
-                    onPressed: () {
+                    onPressed: _isSending ? null : () {
                       _formKey.currentState!.reset();
                     },
                     child: const Text("Reset Form"),
                   ),
                   ElevatedButton(
-                    onPressed: _saveItem,
-                    child: const Text("Sumbit"),
+                    onPressed: _isSending ? null : _saveItem,
+                    child: _isSending ? const SizedBox(height: 16,width: 16,child: CircularProgressIndicator(),) : const Text("Sumbit"),
                   ),
                 ],
               )
